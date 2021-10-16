@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import classNames from 'classnames';
 import { Route } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
@@ -32,6 +32,9 @@ import { TimelineDemo } from './pages/TimelineDemo';
 
 import PrimeReact from 'primereact/api';
 
+import { Context } from './store' 
+import Login from './components/Login'
+
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
@@ -40,7 +43,8 @@ import './layout/flags/flags.css';
 import './layout/layout.scss';
 import './App.scss';
 
-const App = () => {
+const Home = () => {
+    const [state, dispatch] = useContext(Context)
 
     const [layoutMode, setLayoutMode] = useState('static');
     const [layoutColorMode, setLayoutColorMode] = useState('light')
@@ -147,10 +151,21 @@ const App = () => {
 
     const menu = [
         {
-            label: 'Home',
-            items: [{
-                label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/'
-            }]
+            label: 'Inventario',
+            items: [
+                { label: 'Dashboard', icon: '', to: '/' },
+                { label: 'Categorias', icon: '', to: '/categories'},
+                { label: 'Marcas', icon: '', to: '/brands'},
+                { label: 'Products', icon: '', to: '/products'}
+            ]
+        },
+        {
+            label: 'Tiendas',
+            items: [
+                { label: 'Mi Tienda', icon: '', to: '/f' },
+                { label: 'Tato', icon: '', to: '/a1'},
+                { label: 'Otra tienda', icon: '', to: '/b1'}
+            ]
         },
         {
             label: 'UI Kit', icon: 'pi pi-fw pi-sitemap',
@@ -271,7 +286,9 @@ const App = () => {
             <div className="layout-main-container">
                 <div className="layout-main">
                     <Route path="/" exact component={Dashboard}/>
-                    <Route path="/formlayout" component={FormLayoutDemo}/>
+                    <Route path="/categories" exact component={FormLayoutDemo}/>
+                    <Route path="/products" component={InputDemo}/>
+                    <Route path="/brands" component={FormLayoutDemo}/>
                     <Route path="/input" component={InputDemo}/>
                     <Route path="/floatlabel" component={FloatLabelDemo}/>
                     <Route path="/invalidstate" component={InvalidStateDemo}/>
@@ -298,13 +315,18 @@ const App = () => {
             <AppConfig rippleEffect={ripple} onRippleEffect={onRipple} inputStyle={inputStyle} onInputStyleChange={onInputStyleChange}
                        layoutMode={layoutMode} onLayoutModeChange={onLayoutModeChange} layoutColorMode={layoutColorMode} onColorModeChange={onColorModeChange} />
 
-            <CSSTransition classNames="layout-mask" timeout={{ enter: 200, exit: 200 }} in={mobileMenuActive} unmountOnExit>
-                <div className="layout-mask p-component-overlay"></div>
-            </CSSTransition>
-
         </div>
     );
 
 }
-
+const App = ()=>{
+    const [state, dispatch] = useContext(Context)
+    const { user } = state
+    return (
+        <>
+            { !user && <Login/> }
+            { user && <Home/> }           
+        </>
+    )
+}
 export default App;
