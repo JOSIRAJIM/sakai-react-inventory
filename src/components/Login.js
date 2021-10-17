@@ -4,22 +4,28 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Password } from 'primereact/password';
 import { classNames } from 'primereact/utils';
+import { Dialog } from 'primereact/dialog';
 import '../login.css';
 
 import { Context } from '../store' 
+import { useDirectus } from '../DirectusProvider'
 
+const renderFooter = (onClick) => {
+    return (
+        <div>
+            <Button label="Aceptar" icon="pi pi-check" onClick={()=>onClick(false)} className="p-button-text" />
+         </div>
+    );
+}
 // https://primefaces.org/primereact/showcase/#/reactfinalform
 export const Login = (props) => {
     const [state, dispatch] = useContext(Context)
     const [showMessage, setShowMessage] = useState(false);
     const [formData, setFormData] = useState({});
-
+    const { directus } = useDirectus();
+    const [authError, setAuthError] = useState(false)
     const validate = (data) => {
         let errors = {};
-
-        if (!data.name) {
-            errors.name = 'Name is required.';
-        }
 
         if (!data.email) {
             errors.email = 'Email is required.';
@@ -36,12 +42,21 @@ export const Login = (props) => {
     };
 
     const onSubmit = (data, form) => {
-        dispatch({type: 'SET_USER_LOGGED', user: 'balartalain'})
-        //props.history.push('/')
-        setFormData(data);
-        setShowMessage(true);
-
-        form.restart();
+        const login = async()=>{
+            try{
+                const response = await directus.auth.login({
+                    email: data.email,
+                    password: data.password,
+                });
+                dispatch({type: 'SET_USER_LOGGED', user: response})
+                props.history.push('/')
+            }
+            catch(error){
+                setAuthError(true)
+            }
+            
+        }
+        login()
     };
 
     const isFormFieldValid = (meta) => !!(meta.touched && meta.error);
@@ -49,23 +64,14 @@ export const Login = (props) => {
         return isFormFieldValid(meta) && <small className="p-error">{meta.error}</small>;
     };
 
-
+    console.log('Form')
     return (
         <div className="form-demo">
             <div className="p-d-flex p-jc-center">
                 <div className="card">
                     <h5 className="p-text-center">Login</h5>
-                    <Form onSubmit={onSubmit} initialValues={{ name: '', email: '', password: ''}} validate={validate} render={({ handleSubmit }) => (
+                    <Form onSubmit={onSubmit} initialValues={{ email: '', password: ''}} validate={validate} render={({ handleSubmit }) => (
                         <form onSubmit={handleSubmit} className="p-fluid">
-                            <Field name="name" render={({ input, meta }) => (
-                                <div className="p-field">
-                                    <span className="p-float-label">
-                                        <InputText id="name" {...input} autoFocus className={classNames({ 'p-invalid': isFormFieldValid(meta) })} />
-                                        <label htmlFor="name" className={classNames({ 'p-error': isFormFieldValid(meta) })}>Name*</label>
-                                    </span>
-                                    {getFormErrorMessage(meta)}
-                                </div>
-                            )} />
                             <Field name="email" render={({ input, meta }) => (
                                 <div className="p-field">
                                     <span className="p-float-label p-input-icon-right">
@@ -86,11 +92,14 @@ export const Login = (props) => {
                                 </div>
                             )} />
 
-                            <Button type="submit" label="Submit" className="p-mt-2" />
+                            <Button type="submit" label="Submit" className="p-mt-2" />                            
                         </form>
-                    )} />
+                    )} />                   
                 </div>
             </div>
+            <Dialog header="Error de autenticación" visible={authError} style={{ width: '50vw' }} footer={renderFooter(setAuthError)} onHide={() => setAuthError(false)}>
+            <p>Usuario y/o contraseña incorrectos.</p>
+        </Dialog>
         </div>
     );
 }
