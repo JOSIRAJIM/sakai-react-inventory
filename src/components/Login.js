@@ -44,14 +44,18 @@ export const Login = (props) => {
     const onSubmit = (data, form) => {
         const login = async()=>{
             try{
-                const response = await directus.auth.login({
+                await directus.auth.login({
                     email: data.email,
                     password: data.password,
                 });
-                dispatch({type: 'SET_USER_LOGGED', user: response})
+                const userInfo = await directus.users.me.read({
+                    fields: ['*', 'role.id', 'role.name'],
+               }); 
+                dispatch({type: 'SET_USER_LOGGED', user: userInfo})
                 props.history.push('/')
             }
             catch(error){
+                // TODO: Check and handle error 
                 setAuthError(true)
             }
             

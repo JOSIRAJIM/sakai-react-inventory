@@ -6,13 +6,18 @@ import App from './App';
 import { BrowserRouter, Switch } from 'react-router-dom'
 import ScrollToTop from './ScrollToTop';
 
-import Store, { Context } from './store'
+import { DirectusProvider } from './DirectusProvider';
+
+import Store from './store'
 ReactDOM.render(
     <BrowserRouter>
     <Switch>
         <ScrollToTop>
             <Store>
+           <DirectusProvider apiUrl="http://localhost:8055/">
                 <App></App>
+            </DirectusProvider>
+
             </Store>
         </ScrollToTop>
     </Switch>

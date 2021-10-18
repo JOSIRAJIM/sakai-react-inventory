@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import classNames from 'classnames';
-import { Route } from 'react-router-dom';
+import { Route, Switch } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 
 import { AppTopbar } from './AppTopbar';
@@ -34,7 +34,7 @@ import PrimeReact from 'primereact/api';
 
 import { Context } from './store' 
 import Login from './components/Login'
-
+import { menu, getMenuBasedInRole } from './Menu' 
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
@@ -42,10 +42,15 @@ import 'prismjs/themes/prism-coy.css';
 import './layout/flags/flags.css';
 import './layout/layout.scss';
 import './App.scss';
+import RequestStatus from './utils/RequestStatus';
+//import { useDirectus } from './DirectusProvider'
+import { useDirectusRequest } from './hooks/useDirectusRequest';
+//import { Directus } from '@directus/sdk';
+import { asyncDirectus } from './utils/asyncDirectus';
 
-const Home = () => {
+
+const Home = (props) => {
     const [state, dispatch] = useContext(Context)
-
     const [layoutMode, setLayoutMode] = useState('static');
     const [layoutColorMode, setLayoutColorMode] = useState('light')
     const [inputStyle, setInputStyle] = useState('outlined');
@@ -55,11 +60,22 @@ const Home = () => {
     const [mobileMenuActive, setMobileMenuActive] = useState(false);
     const [mobileTopbarMenuActive, setMobileTopbarMenuActive] = useState(false);
 
+    //const { directus } = useDirectus();
+    const [response, error, status] = useDirectusRequest(useCallback(async directus => {
+        return await directus.users.me.read({
+            fields: ['*', 'role.id', 'role.name', 'store.id'],
+        });   
+
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [props.location.pathname]));
+    //const [status, setStatus] = useState(RequestStatus.Pending)
+    const [stores, setStores] = useState([])
+
+
     PrimeReact.ripple = true;
 
     let menuClick = false;
     let mobileTopbarMenuClick = false;
-
     useEffect(() => {
         if (mobileMenuActive) {
             addClass(document.body, "body-overflow-hidden");
@@ -149,105 +165,7 @@ const Home = () => {
         return window.innerWidth >= 992;
     }
 
-    const menu = [
-        {
-            label: 'Inventario',
-            items: [
-                { label: 'Dashboard', icon: '', to: '/' },
-                { label: 'Categorias', icon: '', to: '/categories'},
-                { label: 'Marcas', icon: '', to: '/brands'},
-                { label: 'Products', icon: '', to: '/products'}
-            ]
-        },
-        {
-            label: 'Tiendas',
-            items: [
-                { label: 'Mi Tienda', icon: '', to: '/f' },
-                { label: 'Tato', icon: '', to: '/a1'},
-                { label: 'Otra tienda', icon: '', to: '/b1'}
-            ]
-        },
-        {
-            label: 'UI Kit', icon: 'pi pi-fw pi-sitemap',
-            items: [
-                {label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/formlayout'},
-                {label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/input'},
-                {label: "Float Label", icon: "pi pi-fw pi-bookmark", to: "/floatlabel"},
-                {label: "Invalid State", icon: "pi pi-fw pi-exclamation-circle", to: "invalidstate"},
-                {label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/button'},
-                {label: 'Table', icon: 'pi pi-fw pi-table', to: '/table'},
-                {label: 'List', icon: 'pi pi-fw pi-list', to: '/list'},
-                {label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/tree'},
-                {label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/panel'},
-                {label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/overlay'},
-                {label: 'Menu', icon: 'pi pi-fw pi-bars', to: '/menu'},
-                {label: 'Message', icon: 'pi pi-fw pi-comment', to: '/messages'},
-                {label: 'File', icon: 'pi pi-fw pi-file', to: '/file'},
-                {label: 'Chart', icon: 'pi pi-fw pi-chart-bar', to: '/chart'},
-                {label: 'Misc', icon: 'pi pi-fw pi-circle-off', to: '/misc'},
-            ]
-        },
-        {
-            label: 'Pages', icon: 'pi pi-fw pi-clone',
-            items: [
-                {label: 'Crud', icon: 'pi pi-fw pi-user-edit', to: '/crud'},
-                {label: 'Timeline', icon: 'pi pi-fw pi-calendar', to: '/timeline'},
-                {label: 'Empty', icon: 'pi pi-fw pi-circle-off', to: '/empty'}
-            ]
-        },
-        {
-            label: 'Menu Hierarchy', icon: 'pi pi-fw pi-search',
-            items: [
-                {
-                    label: 'Submenu 1', icon: 'pi pi-fw pi-bookmark',
-                    items: [
-                        {
-                            label: 'Submenu 1.1', icon: 'pi pi-fw pi-bookmark',
-                            items: [
-                                {label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-bookmark'},
-                                {label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-bookmark'},
-                                {label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark'},
-                            ]
-                        },
-                        {
-                            label: 'Submenu 1.2', icon: 'pi pi-fw pi-bookmark',
-                            items: [
-                                {label: 'Submenu 1.2.1', icon: 'pi pi-fw pi-bookmark'},
-                                {label: 'Submenu 1.2.2', icon: 'pi pi-fw pi-bookmark'}
-                            ]
-                        },
-                    ]
-                },
-                {
-                    label: 'Submenu 2', icon: 'pi pi-fw pi-bookmark',
-                    items: [
-                        {
-                            label: 'Submenu 2.1', icon: 'pi pi-fw pi-bookmark',
-                            items: [
-                                {label: 'Submenu 2.1.1', icon: 'pi pi-fw pi-bookmark'},
-                                {label: 'Submenu 2.1.2', icon: 'pi pi-fw pi-bookmark'},
-                                {label: 'Submenu 2.1.3', icon: 'pi pi-fw pi-bookmark'},
-                            ]
-                        },
-                        {
-                            label: 'Submenu 2.2', icon: 'pi pi-fw pi-bookmark',
-                            items: [
-                                {label: 'Submenu 2.2.1', icon: 'pi pi-fw pi-bookmark'},
-                                {label: 'Submenu 2.2.2', icon: 'pi pi-fw pi-bookmark'}
-                            ]
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            label: 'Get Started',
-            items: [
-                {label: 'Documentation', icon: 'pi pi-fw pi-question', command: () => {window.location = "#/documentation"}},
-                {label: 'View Source', icon: 'pi pi-fw pi-search', command: () => {window.location = "https://github.com/primefaces/sakai-react"}}
-            ]
-        }
-    ];
+    
 
     const addClass = (element, className) => {
         if (element.classList)
@@ -264,7 +182,10 @@ const Home = () => {
     }
 
     const wrapperClass = classNames('layout-wrapper', {
-        'layout-overlay': layoutMode === 'overlay',
+        'layout-overlay': layoutMode === 'overlay',        // const response = await directus.auth.login({
+            //     email: 'tato@gmail.com',
+            //     password: 'tato',
+            // });
         'layout-static': layoutMode === 'static',
         'layout-static-sidebar-inactive': staticMenuInactive && layoutMode === 'static',
         'layout-overlay-sidebar-active': overlayMenuActive && layoutMode === 'overlay',
@@ -273,14 +194,62 @@ const Home = () => {
         'p-ripple-disabled': ripple === false,
         'layout-theme-light': layoutColorMode === 'light'
     });
+    // const checkUserAuth = useCallback(async() => {
+    //         try{
+    //             //alert(1)
+    //             console.log('checkUserAuth')
+    //             setStatus(RequestStatus.Pending)
+    //             const userInfo = await directus.users.me.read({
+    //                  fields: ['*', 'role.id', 'role.name', 'store.id'],
+    //             });      
+                
+    //             dispatch({type: 'SET_USER_LOGGED', user:{...userInfo}})              
+    //             setStatus(RequestStatus.Success)
+    //             //return userInfo
+    //         }
+    //         catch(error){
+    //             // TODO: check error code
+    //             props.history.push('/login')
+    //         }
+    //     },[directus.users.me, dispatch, props.history])
+    // useEffect(() => {
+    //     checkUserAuth()
+    // }, [checkUserAuth, props.location.pathname])
 
+    useEffect(() => {
+        const getStores = async()=>{
+            //const stores = await directus.items('store').readMany();
+            const [stores, storesError] = await asyncDirectus(async(directus)=>{
+                return await directus.items('store').readMany(); 
+            })
+            if (storesError){
+                console.dir(storesError)
+                // TODO: storesError.errors[0].extension.code
+                // FORBIDDEN: Mo authorizado
+                //console.log(storesError.errors[0].extensions.code)
+            } else{
+                setStores(stores.data.map(store=>({
+                    label: state.user?.store.id === store.id? 'Mi Tienda': store.name,
+                    to: `/store/${store.id}`
+                    //to: '/button'
+                })))  
+            }
+            
+        }
+         if (status === RequestStatus.Success){
+            dispatch({type: 'SET_USER_LOGGED', user:{...response}}) 
+            getStores()
+         }                 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [status])
+    console.log('Home')
+    console.log(props.location.pathname)
     return (
         <div className={wrapperClass} onClick={onWrapperClick}>
             <AppTopbar onToggleMenuClick={onToggleMenuClick} layoutColorMode={layoutColorMode}
-                       mobileTopbarMenuActive={mobileTopbarMenuActive} onMobileTopbarMenuClick={onMobileTopbarMenuClick} onMobileSubTopbarMenuClick={onMobileSubTopbarMenuClick}/>
-
+                       mobileTopbarMenuActive={mobileTopbarMenuActive} onMobileTopbarMenuClick={onMobileTopbarMenuClick} onMobileSubTopbarMenuClick={onMobileSubTopbarMenuClick}/>            
             <div className="layout-sidebar" onClick={onSidebarClick}>
-                <AppMenu model={menu} onMenuItemClick={onMenuItemClick} layoutColorMode={layoutColorMode} />
+                <AppMenu model={getMenuBasedInRole({currentRole: state.user?.role.name, stores})} onMenuItemClick={onMenuItemClick} layoutColorMode={layoutColorMode} />
             </div>
 
             <div className="layout-main-container">
@@ -319,14 +288,15 @@ const Home = () => {
     );
 
 }
-const App = ()=>{
-    const [state, dispatch] = useContext(Context)
-    const { user } = state
+const sleep = async(delay)=> new Promise((resolve)=>{ setTimeout(resolve, delay)})
+
+const App = ()=>{   
+    console.log('App')
     return (
-        <>
-            { !user && <Login/> }
-            { user && <Home/> }           
-        </>
+        <Switch> 
+            <Route exact path='/login' component={Login} />
+            <Route exact path={'*'}  component={Home} />            
+        </Switch>
     )
 }
 export default App;
