@@ -294,7 +294,7 @@ const App = ()=>{
     console.log('App')
     return (
         <Switch> 
-            <Route exact path='/login' component={Login} />
+            <Route exact path='/' component={Login} />
             <Route exact path={'*'}  component={Home} />            
         </Switch>
     )
